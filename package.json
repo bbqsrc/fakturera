@@ -14,10 +14,15 @@
     "eslint-plugin-babel": "^3.0.0"
   },
   "dependencies": {
+    "bignumber.js": "^2.1.0",
     "handlebars": "^4.0.5",
+    "handlebars-intl": "^1.1.1",
+    "intl": "^1.0.1",
     "koa": "^1.1.2",
     "koa-better-body": "^1.0.17",
     "koa-rutt": "^0.1.0",
-    "koa-views": "^3.1.0"
+    "marked": "^0.3.5",
+    "moment": "^2.10.6",
+    "mongoose": "^4.2.9"
   }
 }

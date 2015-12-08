@@ -18,6 +18,7 @@
       table.invoice-items {
         width: 100%;
         border-collapse: collapse;
+        margin: 1.5em 0;
       }
       .invoice-items th {
         white-space: nowrap;
@@ -40,19 +41,41 @@
         width: 100%;
       }
 
+      .advice {
+        padding: 1em;
+        margin: 1.5em;
+        border: 1px solid #bbb;
+      }
+
       h1, h2, h3, h4, h5, h6 {
         margin: 0;
       }
+      h3 {
+        margin-bottom: 0.1em;
+      }
 
       .client { margin-top: 1em; }
-      .client p { margin: 0; }
+      p { margin: 0; }
+
+      .payment-method {
+        margin-top: 1em;
+      }
 
       .number-box {
         border: 1px solid #bbb;
         display: inline-block;
         width: 6em;
-        margin: .3em 0;
+        margin: .3em 0 0 .3em;
         padding: .15em;
+      }
+
+      .provider .pull-left {
+        width: 50%;
+      }
+
+      .remarks {
+        text-align: center;
+        margin-top: 1em;
       }
     </style>
   </head>
@@ -90,6 +113,9 @@
         <div style='padding-left: 2em'>
           {{client.name}}
           {{markdown client.details}}
+          {{#if client.businessId}}
+          {{markdown client.businessId}}
+          {{/if}}
         </div>
       </div>
     </header>
@@ -132,9 +158,10 @@
     <footer class='container'>
       <div class="pull-left">
         <h2>Payment Options</h2>
+
         {{#each paymentMethods}}
         <div class="payment-method">
-          <strong>{{title}}</strong>
+          <h3>{{title}}</h3>
           <div>{{markdown details}}</div>
         </div>
         {{/each}}
@@ -150,13 +177,13 @@
           {{/if}}
 
           <div>
-            <strong>Total payable: </strong>
+            Total payable:
             <strong class="number-box">{{formatNumber amountPayable style="currency" currency=currency}}</strong>
           </div>
 
           <div>
-            <strong>Payment due: </strong>
-            <span class="number-box">{{formatDate dueDate "short"}}</span>
+            Payment due:
+            <strong class="number-box">{{formatDate dueDate "short"}}</strong>
           </div>
         </div>
       </div>
@@ -168,7 +195,7 @@
       {{/if}}
 
       {{#if remarks}}
-      <p style="text-align:center"><em>{{remarks}}</em></p>
+      <p class="remarks"><em>{{remarks}}</em></p>
       {{/if}}
     </footer>
   </body>

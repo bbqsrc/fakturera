@@ -13,7 +13,8 @@ const app = require('koa')(),
       models = require('./models'),
       Handlebars = require('handlebars'),
       HandlebarsIntl = require('handlebars-intl'),
-      marked = require('marked');
+      marked = require('marked'),
+      childProcess = require('child_process');
 
 HandlebarsIntl.registerWith(Handlebars);
 
@@ -21,7 +22,7 @@ Handlebars.registerHelper('markdown', function(data, context) { // eslint-disabl
   if (data == null) {
     return '';
   }
-  return new Handlebars.SafeString(marked(data).replace(/\n/g, '<br>'));
+  return new Handlebars.SafeString(marked(data).trim().replace(/\n/g, '<br>'));
 });
 
 mongoose.connect('mongodb://localhost:27017/fakturera');
@@ -29,6 +30,23 @@ const db = mongoose.connection;
 
 const tmpl = Handlebars.compile(fs.readFileSync(
   path.resolve(__dirname, 'templates', 'invoice.hbs'), 'utf8'));
+
+const genInvoice = (invoice) => {
+  return tmpl(invoice, {
+    data: { intl: {
+      locales: invoice.client.locale,
+      formats: {
+        date: {
+          short: {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          }
+        }
+      }
+    }}
+  });
+};
 
 const router = new Router();
 
@@ -59,20 +77,35 @@ router
     return (this.body = 'Not found.');
   }
 
-  this.body = tmpl(invoice, {
-    data: { intl: {
-      locales: invoice.client.locale,
-      formats: {
-        date: {
-          short: {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-          }
-        }
-      }
-    }}
-  });
+  this.body = genInvoice(invoice);
+})
+.get('/:clientSlug/:year/:month/:day/:id/pdf', function* getInvoicePdf() {
+  this.type = "application/pdf";
+
+  const invoice = yield models.Invoice.findOne({ _id: this.params.id });
+
+  if (!invoice) {
+    return (this.body = 'Not found.');
+  }
+
+  const html = genInvoice(invoice);
+
+  const proc = childProcess.spawn('wkhtmltopdf', ['--print-media-type', '-', '-']);
+
+  proc.stdin.write(html);
+  proc.stdin.end();
+
+  this.body = yield (new Promise((resolve, reject) => {
+    let bufs = [];
+
+    proc.stdout.on('data', data => {
+      bufs.push(data);
+    });
+
+    proc.stdout.on('close', () => {
+      resolve(Buffer.concat(bufs));
+    })
+  }));
 });
 
 app.use(router.middleware());
